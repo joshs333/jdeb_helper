@@ -8,9 +8,7 @@ description: "Template out debian files for easier configuration."
 depends: ""
 copyright_type: "gpl-2"
 copyright_name: "2021 Bluejay Robotics"
-make_commands: [
-  "make all"
-]
+make_commands: []
 installs:
-  "debian_templates": "etc/jdeb_helper",
+  "debian_templates": "etc/jdeb_helper"
   "jdeb_helper": "usr/bin"
