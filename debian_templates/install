@@ -1,0 +1,3 @@
+{% for exec, location in installs.items() %}
+{{exec}} {{location}}
+{% endfor %}

@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import os
+import yaml
+import argparse
+from jinja2 import Environment, FileSystemLoader
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="test.yaml", help="Debian Config")
+    parser.add_argument("--templates", default=os.path.join(os.path.split(os.path.realpath(__file__))[0], "debian_templates"), help="Template debian files to be filled in from the config.")
+    parser.add_argument("--output_dir", default="debian", help="Location to write debian values too.")
+    args = parser.parse_args()
+
+    config_data = None
+    try:
+        config_data = yaml.load(open(args.config), Loader=yaml.Loader)
+    except Exception as err:
+        print("Error loading config: [%s][%s]"%(
+            args.config,
+            str(err)
+        ))
+
+    if not os.path.exists(args.output_dir):
+        os.mkdir(args.output_dir)
+
+
+    env = Environment(loader = FileSystemLoader(args.templates), trim_blocks=True, lstrip_blocks=True)
+    templates = [
+        (env.get_template('compat'), 'compat'),
+        (env.get_template('control'), 'control'),
+        (env.get_template('install'), 'install'),
+        (env.get_template('rules'), 'rules')
+    ]
+
+    copyright_type = "gpl-2"
+    if "copyright_type" not in config_data:
+        print("WARN: no copyright type selected, defaulting to GPL-2.")
+    else:
+        copyright_type = config_data["copyright_type"]
+    templates.append((env.get_template('copyrights/%s'%(copyright_type)), 'copyright'))
+
+    print("Generating debian files for %s."%(config_data["package_name"]))
+    for template, filename in templates:
+        r = template.render(config_data)
+        output_file = os.path.join(args.output_dir, filename)
+        try:
+            with open(output_file, "w+") as f:
+                f.write(r)
+        except Exception as err:
+            print("Unable to generate [%s], [%s]"%(
+                filename,
+                str(err)
+            ))
+    print("Generating complete.")

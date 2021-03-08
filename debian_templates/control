@@ -1,0 +1,15 @@
+Source: {{package_name}}
+Section: utils
+Priority: extra
+Maintainer: {{maintainer}}
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+Vcs-Git: {{vcs_git}}
+Vcs-Browser: {{vcs_browser}}
+
+Package: {{package_name}}
+Section: utils
+Priority: extra
+Architecture: {{arch}}
+Depends: ${shlibs:Depends}, ${misc:Depends} {{depends}}
+Description: {{description}}
