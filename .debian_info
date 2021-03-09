@@ -1,14 +1,37 @@
 # Some variables that are used with a helper script to create the debian
-package_name: jdeb_helper
+package_name: jdeb-helper
 arch: any
 vcs_git: git@github.com:joshs333:jdeb_helper
 vcs_browser: http://github.com/joshs333/jdeb_helper
 maintainer: "Joshua Spisak <jspisak@andrew.cmu.edu>"
 description: "Template out debian files for easier configuration."
-depends: ""
+depends: "python3, python3-jinja2, python3-yaml"
 copyright_type: "gpl-2"
 copyright_name: "2021 Bluejay Robotics"
 make_commands: []
+test_commands: []
 installs:
   "debian_templates": "etc/jdeb_helper"
   "jdeb_helper": "usr/bin"
+
+changelog:
+  - type: "stable"
+    version: "0.0.4-1"
+    stamp: "Mon, 8 Mar 2021 21:41:00 +0100"
+    messages:
+    - "Add fixes to build and test"
+  - type: "stable"
+    version: "0.0.3-1"
+    stamp: "Mon, 8 Mar 2021 21:41:00 +0100"
+    messages:
+    - "Add option to have separate changelog"
+  - type: "stable"
+    version: "0.0.2-1"
+    stamp: "Mon, 8 Mar 2021 17:05:35 +0100"
+    messages:
+    - "Add commas, test addition."
+  - type: "stable"
+    version: "0.0.1-1"
+    stamp: "Mon, 8 Mar 2021 16:05:35 +0100"
+    messages:
+    - "Base build"

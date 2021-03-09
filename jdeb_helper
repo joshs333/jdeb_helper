@@ -2,6 +2,7 @@
 import os
 import yaml
 import argparse
+import subprocess
 from jinja2 import Environment, FileSystemLoader
 
 if __name__ == "__main__":
@@ -14,47 +15,71 @@ if __name__ == "__main__":
     parser.add_argument("--config", default=".debian_info", help="Debian Config")
     parser.add_argument("--templates", default=default_template_path, help="Template debian files to be filled in from the config.")
     parser.add_argument("--output_dir", default="debian", help="Location to write debian values too.")
+    parser.add_argument("--changelog", help="Optional changelog in addition to the config.")
+    parser.add_argument("--skip_file_update", help="Skips any updates to the debian files.", action="store_true")
+    parser.add_argument("--build", help="Build", action="store_true")
     args = parser.parse_args()
 
-    config_data = None
-    try:
-        config_data = yaml.load(open(args.config), Loader=yaml.Loader)
-    except Exception as err:
-        print("Error loading config: [%s][%s]"%(
-            args.config,
-            str(err)
-        ))
-        exit(0)
-
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
-
-
-    env = Environment(loader = FileSystemLoader(args.templates), trim_blocks=True, lstrip_blocks=True)
-    templates = [
-        (env.get_template('compat'), 'compat'),
-        (env.get_template('control'), 'control'),
-        (env.get_template('install'), 'install'),
-        (env.get_template('rules'), 'rules')
-    ]
-
-    copyright_type = "gpl-2"
-    if "copyright_type" not in config_data:
-        print("WARN: no copyright type selected, defaulting to GPL-2.")
-    else:
-        copyright_type = config_data["copyright_type"]
-    templates.append((env.get_template('copyrights/%s'%(copyright_type)), 'copyright'))
-
-    print("Generating debian files for %s."%(config_data["package_name"]))
-    for template, filename in templates:
-        r = template.render(config_data)
-        output_file = os.path.join(args.output_dir, filename)
+    if not args.skip_file_update:
+        config_data = None
         try:
-            with open(output_file, "w+") as f:
-                f.write(r)
+            config_data = yaml.load(open(args.config), Loader=yaml.Loader)
         except Exception as err:
-            print("Unable to generate [%s], [%s]"%(
-                filename,
+            print("Error loading config: [%s][%s]"%(
+                args.config,
                 str(err)
             ))
-    print("Generating complete.")
+            exit(0)
+
+
+        try:
+            if args.changelog is not None:
+                changelog = yaml.load(open(args.changelog), Loader=yaml.Loader)
+                config_data["changelog"] = changelog
+        except Exception as err:
+            print("Error loading changelog: [%s][%s], skipping."%(
+                args.config,
+                str(err)
+            ))
+            exit(0)
+
+        if not os.path.exists(args.output_dir):
+            os.mkdir(args.output_dir)
+
+
+        env = Environment(loader = FileSystemLoader(args.templates), trim_blocks=True, lstrip_blocks=True)
+        templates = [
+            (env.get_template('compat'), 'compat'),
+            (env.get_template('control'), 'control'),
+            (env.get_template('install'), 'install'),
+            (env.get_template('rules'), 'rules'),
+            (env.get_template('changelog'), 'changelog')
+        ]
+
+        copyright_type = "gpl-2"
+        if "copyright_type" not in config_data:
+            print("WARN: no copyright type selected, defaulting to GPL-2.")
+        else:
+            copyright_type = config_data["copyright_type"]
+        templates.append((env.get_template('copyrights/%s'%(copyright_type)), 'copyright'))
+
+        print("Generating debian files for %s."%(config_data["package_name"]))
+        for template, filename in templates:
+            r = template.render(config_data)
+            output_file = os.path.join(args.output_dir, filename)
+            try:
+                with open(output_file, "w+") as f:
+                    f.write(r)
+            except Exception as err:
+                print("Unable to generate [%s], [%s]"%(
+                    filename,
+                    str(err)
+                ))
+        print("Generating complete.")
+    
+    if args.build:
+        print("Running debian creation command.")
+        aflag = ""
+        if config_data["arch"] == "arm64" or config_data["arch"] == "amd64":
+            aflag = "-a%s"%config_data["arch"]
+        subprocess.run("dpkg-buildpackage -uc -us -Pcross,nocheck %s"%(aflag), shell=True, check=True)

@@ -11,5 +11,5 @@ Package: {{package_name}}
 Section: utils
 Priority: extra
 Architecture: {{arch}}
-Depends: ${shlibs:Depends}, ${misc:Depends} {{depends}}
+Depends: ${shlibs:Depends}, ${misc:Depends}, {{depends}}
 Description: {{description}}

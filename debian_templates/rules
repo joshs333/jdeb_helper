@@ -2,7 +2,16 @@
 %:
 	dh $@ 
 
-override_dh_auto_make:
+{% if make_commands %}
+override_dh_auto_build:
 {% for command in make_commands %}
 	{{command}}
 {% endfor %}
+{% endif %}
+
+{% if test_commands %}
+override_dh_auto_test:
+{% for command in test_commands %}
+	{{command}}
+{% endfor %}
+{% endif %}
